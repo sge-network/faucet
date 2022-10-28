@@ -7,7 +7,8 @@ import os
 
 db = redis.Redis()
 
-client = discord.Client()
+intents = discord.Intents(messages=True, guilds=True, message_content=True)
+client = discord.Client(intents=intents)
 
 FAUCET_ENDPOINT = os.getenv('FAUCET_ENDPOINT', default='http://localhost:8000')
 
@@ -34,11 +35,11 @@ async def on_message(message):
             last_time = float(db.get(author))
             time_diff = datetime.datetime.now().timestamp() - last_time
 
-            if (time_diff - last_time) < 60.0:
+            if (time_diff - last_time) < 86400.0:
                 rsp_msg = "You can request coins no more than once every 24 hours."
                 rsp_msg = rsp_msg + " The next attempt is possible after "
 
-                next_time = last_time + 60.0 - datetime.datetime.now().timestamp()
+                next_time = last_time + 86400.0 - datetime.datetime.now().timestamp()
                 rsp_msg = rsp_msg + str(datetime.timedelta(seconds=next_time))
 
                 await message.channel.send(rsp_msg)
@@ -50,7 +51,7 @@ async def on_message(message):
         rsp_content = json.loads(rsp.content.decode('utf-8'))
 
         if not bool(rsp_content):
-            rsp_msg = "Successfully transferred 100SGE to " + addr
+            rsp_msg = "Successfully transferred 1000SGE to " + addr
             db.setex(
                 author,
                 datetime.timedelta(days=1),
